@@ -400,7 +400,7 @@ JsonValue JsonValue::ArrayValue(Array value)
 {
     JsonValue result;
     result.type_ = Type::Array;
-    result.array_ = std::move(value);
+    result.array_ = std::make_unique<Array>(std::move(value));
     return result;
 }
 
@@ -408,7 +408,7 @@ JsonValue JsonValue::ObjectValue(Object value)
 {
     JsonValue result;
     result.type_ = Type::Object;
-    result.object_ = std::move(value);
+    result.object_ = std::make_unique<Object>(std::move(value));
     return result;
 }
 
@@ -434,12 +434,12 @@ const std::string &JsonValue::string() const
 
 const JsonValue::Array &JsonValue::array() const
 {
-    return array_;
+    return *array_;
 }
 
 const JsonValue::Object &JsonValue::object() const
 {
-    return object_;
+    return *object_;
 }
 
 const JsonValue *JsonValue::Find(const std::string &key) const
@@ -447,8 +447,8 @@ const JsonValue *JsonValue::Find(const std::string &key) const
     if (type_ != Type::Object) {
         return nullptr;
     }
-    const auto found = object_.find(key);
-    return found == object_.end() ? nullptr : &found->second;
+    const auto found = object_->find(key);
+    return found == object_->end() ? nullptr : &found->second;
 }
 
 bool ParseJson(const std::string &text, JsonValue *value, std::string *error)

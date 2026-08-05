@@ -1,6 +1,7 @@
 #ifndef APPLESS_LITE_SERVER_JSON_VALUE_H
 #define APPLESS_LITE_SERVER_JSON_VALUE_H
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -36,8 +37,8 @@ private:
     bool boolean_ = false;
     double number_ = 0;
     std::string string_;
-    Array array_;
-    Object object_;
+    std::unique_ptr<Array> array_;
+    std::unique_ptr<Object> object_;
 };
 
 bool ParseJson(const std::string &text, JsonValue *value, std::string *error);
