@@ -144,10 +144,14 @@ bool ParseArguments(int argc, char **argv, Arguments *arguments, std::string *er
 
 int main(int argc, char **argv)
 {
+    // stdout is consumed by the process that launches lite-server. Flush each
+    // log write promptly even when stdout is connected to a pipe.
+    std::cout << std::unitbuf;
+
     Arguments arguments;
     std::string error;
     if (!ParseArguments(argc, argv, &arguments, &error)) {
-        std::cerr << "lite-server: " << error << "\n\n";
+        std::cout << "lite-server: " << error << "\n\n";
         PrintUsage(argv[0]);
         return 2;
     }
@@ -159,10 +163,10 @@ int main(int argc, char **argv)
     lite_llm::LiteLlm &llm = lite_llm::LiteLlm::Instance();
     const lite_llm::InitializeResult initialized = llm.Initialize(arguments.config_path);
     if (!initialized.ok) {
-        std::cerr << "lite-server: unable to initialize LiteLlm: " << initialized.error << '\n';
+        std::cout << "lite-server: unable to initialize LiteLlm: " << initialized.error << '\n';
         return 3;
     }
-    std::cerr << "lite-server: LiteLlm initialized from " << arguments.config_path << '\n';
+    std::cout << "lite-server: LiteLlm initialized from " << arguments.config_path << '\n';
 
     std::signal(SIGINT, HandleSignal);
     std::signal(SIGTERM, HandleSignal);

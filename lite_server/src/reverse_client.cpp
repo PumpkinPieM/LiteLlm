@@ -36,6 +36,22 @@ std::string ErrnoMessage(const std::string &operation)
     return operation + " failed: " + std::strerror(errno) + " (errno=" + std::to_string(errno) + ")";
 }
 
+std::string LiteLlmErrorMessage(const lite_llm::GenerateResponse &response)
+{
+    JsonValue body;
+    std::string parse_error;
+    if (ParseJson(response.body, &body, &parse_error) && body.type() == JsonValue::Type::Object) {
+        const JsonValue *error = body.Find("error");
+        if (error != nullptr && error->type() == JsonValue::Type::Object) {
+            const JsonValue *message = error->Find("message");
+            if (message != nullptr && message->type() == JsonValue::Type::String) {
+                return message->string();
+            }
+        }
+    }
+    return response.body.empty() ? "LiteLlm returned an empty error response" : response.body;
+}
+
 void ShutdownAndClose(int socket_fd)
 {
     if (socket_fd < 0) {
@@ -92,18 +108,18 @@ int ReverseClient::Run()
         std::string error;
         const int socket_fd = Connect(&error);
         if (socket_fd < 0) {
-            std::cerr << "lite-server: proxy connection failed: " << error << '\n';
+            std::cout << "lite-server: proxy connection failed: " << error << '\n';
             SleepForReconnect(reconnect_delay);
             reconnect_delay = std::min(options_.reconnect_max_ms, reconnect_delay * 2U);
             continue;
         }
-        std::cerr << "lite-server: connected to proxy at " << options_.host << ':' << options_.port << '\n';
+        std::cout << "lite-server: connected to proxy at " << options_.host << ':' << options_.port << '\n';
         const bool authenticated = RunSession(socket_fd, &error);
         ShutdownAndClose(socket_fd);
         if (should_stop_()) {
             break;
         }
-        std::cerr << "lite-server: proxy session ended: " << error << '\n';
+        std::cout << "lite-server: proxy session ended: " << error << '\n';
         if (authenticated) {
             reconnect_delay = options_.reconnect_initial_ms;
         }
@@ -196,7 +212,7 @@ bool ReverseClient::RunSession(int socket_fd, std::string *error)
         return false;
     }
     const std::shared_ptr<SessionState> session = std::make_shared<SessionState>(socket_fd);
-    std::cerr << "lite-server: proxy handshake accepted; model is ready\n";
+    std::cout << "lite-server: proxy handshake accepted; model is ready\n";
     if (!SendFrame(session, protocol::BuildReadyStatus(), error)) {
         return true;
     }
@@ -286,6 +302,12 @@ bool ReverseClient::HandleMessage(const std::shared_ptr<SessionState> &session,
 
     const std::string request_id = id->string();
     llm_.GenerateAsync(body->string(), [this, session, request_id](lite_llm::GenerateResponse response) {
+        if (response.status_code < 200 || response.status_code >= 300) {
+            std::cout << "lite-server: LiteLlm request failed id=" << request_id
+                      << " status=" << response.status_code
+                      << ": " << LiteLlmErrorMessage(response) << '\n';
+        }
+
         bool send_response = false;
         {
             std::lock_guard<std::mutex> lock(session->state_mutex);
@@ -297,7 +319,7 @@ bool ReverseClient::HandleMessage(const std::shared_ptr<SessionState> &session,
             const std::string payload = protocol::BuildChatResponse(request_id, response.status_code,
                 "application/json; charset=utf-8", response.body);
             if (!SendFrame(session, payload, &send_error)) {
-                std::cerr << "lite-server: unable to send response id=" << request_id
+                std::cout << "lite-server: unable to send response id=" << request_id
                           << ": " << send_error << '\n';
                 {
                     std::lock_guard<std::mutex> lock(session->state_mutex);
@@ -305,7 +327,7 @@ bool ReverseClient::HandleMessage(const std::shared_ptr<SessionState> &session,
                 }
                 (void)shutdown(session->socket_fd, SHUT_RDWR);
             } else {
-                std::cerr << "lite-server: completed request id=" << request_id
+                std::cout << "lite-server: completed request id=" << request_id
                           << " status=" << response.status_code
                           << " responseBytes=" << response.body.size() << '\n';
             }
