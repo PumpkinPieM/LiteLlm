@@ -49,15 +49,20 @@ cmake_args=(
 )
 
 if [[ "$arch" != "host" ]]; then
-  if [[ -z "$sdk_root" && -d /Applications/DevEco-Studio.app/Contents/sdk ]]; then
-    sdk_root=/Applications/DevEco-Studio.app/Contents/sdk
+  if [[ -n "${OHOS_NDK:-}" ]]; then
+    ohos_native="$OHOS_NDK"
+    hms_native="$OHOS_NDK"
+  else
+    if [[ -z "$sdk_root" && -d /Applications/DevEco-Studio.app/Contents/sdk ]]; then
+      sdk_root=/Applications/DevEco-Studio.app/Contents/sdk
+    fi
+    if [[ -z "$sdk_root" || ! -d "$sdk_root" ]]; then
+      echo "Unable to locate the DevEco SDK. Pass --sdk-root, set DEVECO_SDK_HOME, or set OHOS_NDK." >&2
+      exit 2
+    fi
+    ohos_native="$sdk_root/default/openharmony/native"
+    hms_native="$sdk_root/default/hms/native"
   fi
-  if [[ -z "$sdk_root" || ! -d "$sdk_root" ]]; then
-    echo "Unable to locate the DevEco SDK. Pass --sdk-root or set DEVECO_SDK_HOME." >&2
-    exit 2
-  fi
-  ohos_native="$sdk_root/default/openharmony/native"
-  hms_native="$sdk_root/default/hms/native"
   cmake_bin="$ohos_native/build-tools/cmake/bin/cmake"
   ninja_bin="$ohos_native/build-tools/cmake/bin/ninja"
   toolchain="$hms_native/build/cmake/hmos.toolchain.bisheng.cmake"

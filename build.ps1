@@ -29,24 +29,29 @@ if ($Arch -eq 'host') {
   & $cmakeCommand.Source --build $BuildDir --config $BuildType
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 } else {
-  if ($SdkRoot.Length -eq 0) {
-    if ($env:DEVECO_SDK_HOME -and (Test-Path -LiteralPath $env:DEVECO_SDK_HOME)) {
-      $SdkRoot = $env:DEVECO_SDK_HOME
-    } else {
-      $homeMarker = Join-Path $env:LOCALAPPDATA 'Huawei\DevEcoStudio6.1\.home'
-      if (Test-Path -LiteralPath $homeMarker) {
-        $studioHome = (Get-Content -Raw -LiteralPath $homeMarker).Trim()
-        $SdkRoot = Join-Path $studioHome 'sdk'
+  if ($env:OHOS_NDK) {
+    $ohosNative = $env:OHOS_NDK
+    $hmsNative = $env:OHOS_NDK
+  } else {
+    if ($SdkRoot.Length -eq 0) {
+      if ($env:DEVECO_SDK_HOME -and (Test-Path -LiteralPath $env:DEVECO_SDK_HOME)) {
+        $SdkRoot = $env:DEVECO_SDK_HOME
+      } else {
+        $homeMarker = Join-Path $env:LOCALAPPDATA 'Huawei\DevEcoStudio6.1\.home'
+        if (Test-Path -LiteralPath $homeMarker) {
+          $studioHome = (Get-Content -Raw -LiteralPath $homeMarker).Trim()
+          $SdkRoot = Join-Path $studioHome 'sdk'
+        }
       }
     }
-  }
-  if ($SdkRoot.Length -eq 0 -or !(Test-Path -LiteralPath $SdkRoot)) {
-    throw 'Unable to locate the DevEco SDK. Pass -SdkRoot or set DEVECO_SDK_HOME.'
-  }
+    if ($SdkRoot.Length -eq 0 -or !(Test-Path -LiteralPath $SdkRoot)) {
+      throw 'Unable to locate the DevEco SDK. Pass -SdkRoot, set DEVECO_SDK_HOME, or set OHOS_NDK.'
+    }
 
-  $resolvedSdk = (Resolve-Path -LiteralPath $SdkRoot).Path
-  $ohosNative = Join-Path $resolvedSdk 'default\openharmony\native'
-  $hmsNative = Join-Path $resolvedSdk 'default\hms\native'
+    $resolvedSdk = (Resolve-Path -LiteralPath $SdkRoot).Path
+    $ohosNative = Join-Path $resolvedSdk 'default\openharmony\native'
+    $hmsNative = Join-Path $resolvedSdk 'default\hms\native'
+  }
   $cmake = Join-Path $ohosNative 'build-tools\cmake\bin\cmake.exe'
   $ninja = Join-Path $ohosNative 'build-tools\cmake\bin\ninja.exe'
   $toolchain = Join-Path $hmsNative 'build\cmake\hmos.toolchain.bisheng.cmake'
