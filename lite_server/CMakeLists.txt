@@ -19,9 +19,9 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         INTERFACE_INCLUDE_DIRECTORIES ${LITE_LLM_INCLUDE_DIR}
     )
     set(LITE_SERVER_LLM_TARGET lite_llm_external)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 else()
     set(LITE_SERVER_LLM_TARGET lite_llm)
 endif()
@@ -39,8 +39,8 @@ add_executable(lite-server src/main.cpp)
 target_link_libraries(lite-server PRIVATE lite_server_core)
 target_compile_options(lite-server PRIVATE -Wall -Wextra -Wpedantic)
 set_target_properties(lite-server PROPERTIES
-    BUILD_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path/../lib,$ORIGIN/../lib>"
-    INSTALL_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path/../lib,$ORIGIN/../lib>"
+    BUILD_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path,$ORIGIN>"
+    INSTALL_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path,$ORIGIN>"
 )
 
 if(LITE_LLM_BUILD_TESTS)
@@ -48,7 +48,7 @@ if(LITE_LLM_BUILD_TESTS)
     target_link_libraries(lite-server-tests PRIVATE lite_server_core)
     target_compile_options(lite-server-tests PRIVATE -Wall -Wextra -Wpedantic)
     set_target_properties(lite-server-tests PROPERTIES
-        BUILD_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path/../lib,$ORIGIN/../lib>"
+        BUILD_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path,$ORIGIN>"
     )
 endif()
 
