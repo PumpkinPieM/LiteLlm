@@ -65,7 +65,16 @@ if [[ "$arch" != "host" ]]; then
   fi
   cmake_bin="$ohos_native/build-tools/cmake/bin/cmake"
   ninja_bin="$ohos_native/build-tools/cmake/bin/ninja"
-  toolchain="$hms_native/build/cmake/hmos.toolchain.bisheng.cmake"
+  for candidate in "$hms_native/build/cmake/ohos.toolchain.cmake" "$hms_native/build/cmake/hmos.toolchain.bisheng.cmake"; do
+    if [[ -f "$candidate" ]]; then
+      toolchain="$candidate"
+      break
+    fi
+  done
+  if [[ -z "${toolchain:-}" ]]; then
+    echo "No toolchain file found under $hms_native/build/cmake/" >&2
+    exit 2
+  fi
   for required in "$cmake_bin" "$ninja_bin" "$toolchain"; do
     if [[ ! -f "$required" ]]; then
       echo "Required SDK file not found: $required" >&2
