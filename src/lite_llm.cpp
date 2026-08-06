@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <exception>
+#include <iostream>
 #include <mutex>
 #include <optional>
 #include <sstream>
@@ -177,8 +178,7 @@ bool ParseRequest(const std::string &body, ParsedRequest *request, std::string *
 
     const JsonValue *stream = root.Find("stream");
     if (stream != nullptr && (stream->type() != JsonValue::Type::Boolean || stream->boolean())) {
-        *error = "streaming is not supported; stream must be false";
-        return false;
+        std::cout << "streaming mode is not supported in LiteLlm yet." << std::endl;
     }
 
     const JsonValue *model = root.Find("model");
