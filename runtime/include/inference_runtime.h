@@ -13,6 +13,7 @@ struct GenerationConfig {
     std::string session_id;
     std::uint32_t max_new_tokens = 512;
     float temperature = 0.7F;
+    bool verbose = false;
 };
 
 enum class GenerateStatus {

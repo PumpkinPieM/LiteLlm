@@ -90,6 +90,18 @@ if(NOT LITE_LLM_USE_MOCK_RUNTIME)
     )
 endif()
 
+add_executable(lite-llm-chat
+    tools/lite_llm_chat.cpp
+)
+target_include_directories(lite-llm-chat PRIVATE ${LITE_LLM_RUNTIME_ROOT}/include)
+target_link_libraries(lite-llm-chat PRIVATE lite_llm_runtime)
+target_compile_options(lite-llm-chat PRIVATE -Wall -Wextra -Wpedantic)
+set_target_properties(lite-llm-chat PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    BUILD_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path/../lib,$ORIGIN/../lib>"
+    INSTALL_RPATH "$<IF:$<PLATFORM_ID:Darwin>,@loader_path/../lib,$ORIGIN/../lib>"
+)
+
 if(LITE_LLM_BUILD_SERVER)
     add_subdirectory(lite_server)
 endif()
@@ -98,6 +110,7 @@ install(TARGETS lite_llm
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION lib
 )
+install(TARGETS lite-llm-chat RUNTIME DESTINATION bin)
 install(FILES include/lite_llm.h DESTINATION include)
 if(LITE_LLM_USE_MOCK_RUNTIME)
     install(TARGETS lite_llm_runtime

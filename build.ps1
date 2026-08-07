@@ -78,4 +78,4 @@ if ($Arch -eq 'host') {
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-Write-Output "Built liblite_llm.so and lite-server in $BuildDir"
+Write-Output "Built liblite_llm.so, lite-llm-chat, and lite-server in $BuildDir"

@@ -484,7 +484,9 @@ public:
             const std::string content = CompletionContent(responseBody);
             const std::string finishReason = JsonStringValue(responseBody, "finish_reason", "stop");
 
-            std::cout << content << std::endl;
+            // Match the production runtime's stdout streaming contract. The
+            // caller owns line termination after Generate returns.
+            std::cout << content << std::flush;
             LITE_LLM_LOG_COMPLETION(content.size());
 
             GenerateResult result;

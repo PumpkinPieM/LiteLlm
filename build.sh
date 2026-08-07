@@ -98,4 +98,4 @@ fi
 "$cmake_bin" "${cmake_args[@]}"
 "$cmake_bin" --build "$build_dir"
 
-echo "Built liblite_llm.so and lite-server in $build_dir"
+echo "Built liblite_llm.so, lite-llm-chat, and lite-server in $build_dir"
